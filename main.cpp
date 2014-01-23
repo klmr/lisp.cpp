@@ -20,11 +20,13 @@ auto get_global_environment() -> environment {
 auto repl(std::string prompt) -> void {
     auto input = std::string{};
     auto global_env = get_global_environment();
-    std::cout << prompt << std::flush;
-    // input ruminations ...
-    std::cout << '\n';
-    auto&& result = eval(read(input), global_env);
-    std::cout << result << '\n';
+    for (;;) {
+        std::cout << prompt << std::flush;
+        if (not getline(std::cin, input))
+            return;
+        auto&& result = eval(read(input), global_env);
+        std::cout << result << '\n';
+    }
 }
 
 auto main() -> int
