@@ -27,14 +27,14 @@ struct literal {
     double value;
 };
 
-enum class call_type { as_macro, as_call };
+enum class call_type { macro, call };
 
 template <call_type C>
 struct callable;
 
-using macro = callable<call_type::as_macro>;
+using macro = callable<call_type::macro>;
 
-using call = callable<call_type::as_call>;
+using call = callable<call_type::call>;
 
 struct list;
 
