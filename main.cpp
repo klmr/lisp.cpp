@@ -7,7 +7,20 @@ using klmr::lisp::environment;
 
 auto read(std::string const& input) -> value {
     (void) input;
-    return klmr::lisp::symbol{"lambda"}; // FIXME placeholder
+    using namespace klmr::lisp;
+
+    return list{
+        symbol{"define"},
+        list{
+            symbol{"lambda"},
+            list{symbol{"n"}},
+            list{
+                symbol{"*"},
+                symbol{"n"},
+                symbol{"n"}
+            }
+        }
+    }; // FIXME placeholder
 }
 
 auto get_global_environment() -> environment {
@@ -32,7 +45,7 @@ auto repl(std::string prompt) -> void {
 auto main() -> int
 try {
     repl(">>> ");
-} catch (char const* msg) {
-    std::cerr << msg << '\n';
+} catch (klmr::lisp::name_error const& msg) {
+    std::cerr << msg.what() << '\n';
     return 1;
 }

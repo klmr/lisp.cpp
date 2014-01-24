@@ -7,6 +7,11 @@
 
 namespace klmr { namespace lisp {
 
+struct name_error : std::logic_error {
+    name_error(symbol sym)
+        : std::logic_error{"Not found: " + sym.repr} {}
+};
+
 struct environment {
     environment(environment* parent = nullptr) : parent{parent} {}
 

@@ -11,7 +11,7 @@ auto environment::operator[](symbol const& sym) -> value& {
             return it->second;
     }
 
-    throw "Not found"; // TODO Replace by real exception type.
+    throw name_error{sym};
 }
 
 auto environment::set(symbol const& sym, value val) -> void {

@@ -50,6 +50,9 @@ struct list {
     using range = boost::sub_range<std::vector<value>>;
     using const_range = boost::sub_range<std::vector<value> const>;
     std::vector<value> values;
+
+    template <typename... Ts>
+    list(Ts&&... values) : values{std::forward<Ts>(values)...} {}
 };
 
 inline auto head(list const& list) -> value const& {
