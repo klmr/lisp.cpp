@@ -25,6 +25,8 @@ In order to understand what we did here, consider the following principles:
  * Manual memory management is error-prone. Avoid it completely.
  * In fact, here are some simple, generally applicable rules:
     * `new` and `delete` are illegal. So are `malloc` and `free`.
+        * (This rule does not apply to placement-`new`. However, prefer using
+          the `constructor` function of an allocator.)
     * C++ allocators are only permissible in low-level implementations of value
       holders.
     * Any other kind of memory management must be performed via exception safe
