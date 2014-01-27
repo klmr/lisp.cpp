@@ -67,22 +67,25 @@ inline auto values(list const& list) -> decltype(list.values) {
     return list.values;
 }
 
+struct environment;
+
 template <call_type C>
 struct callable {
     using iterator = list::const_range::iterator;
-    using function_type = std::function<symbol(iterator, iterator)>;
+    using function_type = std::function<symbol(environment&, iterator, iterator)>;
 
     callable(callable const&) = default;
 
     template <typename F>
-    callable(F lambda) : lambda{lambda} {}
+    callable(environment& parent, std::vector<std::string> formals, F lambda);
 
+    environment& parent;
+    std::vector<std::string> formals;
     function_type lambda;
 
-    auto operator ()(iterator begin, iterator end) const -> value {
-        return lambda(begin, end);
+    auto operator ()(environment& env, iterator begin, iterator end) const -> value {
+        return lambda(env, begin, end);
     }
-
 };
 
 auto operator <<(std::ostream& out, symbol const& sym) -> std::ostream&;
