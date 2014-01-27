@@ -63,7 +63,7 @@ inline auto tail(list const& list) -> list::const_range {
     return {begin(list.values) + 1, end(list.values)};
 }
 
-inline auto values(list const& list) -> decltype(list.values) {
+inline auto values(list const& list) -> decltype(list.values) const& {
     return list.values;
 }
 
@@ -73,8 +73,6 @@ template <call_type C>
 struct callable {
     using iterator = list::const_range::iterator;
     using function_type = std::function<symbol(environment&, iterator, iterator)>;
-
-    callable(callable const&) = default;
 
     template <typename F>
     callable(environment& parent, std::vector<std::string> formals, F lambda);

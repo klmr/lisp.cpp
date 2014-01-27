@@ -1,4 +1,5 @@
 #include "value.hpp"
+#include "environment.hpp"
 
 #include <iostream>
 
@@ -7,7 +8,7 @@ namespace klmr { namespace lisp {
 template <call_type C>
 template <typename F>
 callable<C>::callable(environment& parent, std::vector<std::string> formals, F lambda)
-    : parent{&parent}, formals{formals}, lambda{lambda} {}
+    : parent{parent}, formals{formals}, lambda{lambda} {}
 
 auto operator <<(std::ostream& out, symbol const& sym) -> std::ostream& {
     return out << sym.repr;
