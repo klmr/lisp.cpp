@@ -11,6 +11,7 @@ auto read(std::string const& input) -> value {
 
     return list{
         symbol{"define"},
+        symbol{"double"},
         list{
             symbol{"lambda"},
             list{symbol{"n"}},
@@ -29,9 +30,9 @@ auto get_global_environment() -> environment {
     env.set(symbol{"lambda"},
         macro{env, {"args", "expr"},
         [] (environment& env) {
-            auto&& fformals = as_list(env["formals"]);
-            auto formals = std::vector<symbol>(length(fformals));
-            std::transform(begin(fformals), end(fformals), begin(formals), as_symbol);
+            auto&& args = as_list(env["args"]);
+            auto formals = std::vector<symbol>(length(args));
+            std::transform(begin(args), end(args), begin(formals), as_symbol);
             auto expr = env["expr"];
             // FIXME Capture by value incurs expensive copy. Solved in C++14.
             return call{env, formals, [expr](environment& frame) {
