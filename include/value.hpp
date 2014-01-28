@@ -13,6 +13,10 @@ namespace klmr { namespace lisp {
 
 struct symbol {
     std::string repr;
+
+    symbol() = default;
+    symbol(std::string repr) : repr{std::move(repr)} {}
+    symbol(char const* repr) : repr{repr} {}
 };
 
 inline auto operator ==(symbol const& lhs, symbol const& rhs) -> bool {
@@ -67,24 +71,46 @@ inline auto values(list const& list) -> decltype(list.values) const& {
     return list.values;
 }
 
+inline auto length(list const& list) -> std::size_t {
+    return list.values.size();
+}
+
+inline auto begin(list const& list) -> decltype(begin(list.values)) {
+    return begin(list.values);
+}
+
+inline auto end(list const& list) -> decltype(end(list.values)) {
+    return end(list.values);
+}
+
 struct environment;
 
 template <call_type C>
 struct callable {
     using iterator = list::const_range::iterator;
-    using function_type = std::function<symbol(environment&, iterator, iterator)>;
+    using function_type = std::function<value(environment&)>;
 
-    template <typename F>
-    callable(environment& parent, std::vector<std::string> formals, F lambda);
+    callable(environment& parent, std::vector<symbol> const& formals, function_type lambda);
 
+    // FIXME This leaks memory for “upward funargs”.
     environment& parent;
-    std::vector<std::string> formals;
+    std::vector<symbol> formals;
     function_type lambda;
 
-    auto operator ()(environment& env, iterator begin, iterator end) const -> value {
-        return lambda(env, begin, end);
-    }
+    auto operator ()(environment& env, iterator begin, iterator end) const -> value;
 };
+
+inline auto as_symbol(value const& value) -> symbol {
+    return boost::get<symbol>(value);
+}
+
+inline auto as_literal(value const& value) -> literal {
+    return boost::get<literal>(value);
+}
+
+inline auto as_list(value const& value) -> list {
+    return boost::get<list>(value);
+}
 
 auto operator <<(std::ostream& out, symbol const& sym) -> std::ostream&;
 
@@ -95,6 +121,8 @@ auto operator <<(std::ostream& out, macro const& macro) -> std::ostream&;
 auto operator <<(std::ostream& out, call const& call) -> std::ostream&;
 
 auto operator <<(std::ostream& out, list const& list) -> std::ostream&;
+
+extern const value nil;
 
 } } // namespace klmr::lisp
 

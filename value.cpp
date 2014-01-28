@@ -6,9 +6,23 @@
 namespace klmr { namespace lisp {
 
 template <call_type C>
-template <typename F>
-callable<C>::callable(environment& parent, std::vector<std::string> formals, F lambda)
+callable<C>::callable(
+        environment& parent,
+        std::vector<symbol> const& formals,
+        typename callable<C>::function_type lambda)
     : parent{parent}, formals{formals}, lambda{lambda} {}
+
+template <call_type C>
+auto callable<C>::operator ()(
+        environment& env,
+        iterator begin,
+        iterator end) const -> value {
+    environment frame(env, formals, begin, end);
+    return lambda(frame);
+}
+
+template struct callable<call_type::call>;
+template struct callable<call_type::macro>;
 
 auto operator <<(std::ostream& out, symbol const& sym) -> std::ostream& {
     return out << sym.repr;
@@ -36,5 +50,7 @@ auto operator <<(std::ostream& out, list const& list) -> std::ostream& {
     }
     return out << ')';
 }
+
+value const nil{};
 
 } } // namespace klmr::lisp
