@@ -12,7 +12,7 @@ auto read(std::string const& input) -> value {
     static auto items = std::vector<value> {
         list{
             symbol{"define"},
-            symbol{"double"},
+            symbol{"square"},
             list{
                 symbol{"lambda"},
                 list{symbol{"n"}},
@@ -25,7 +25,7 @@ auto read(std::string const& input) -> value {
         },
 
         list{
-            symbol{"double"},
+            symbol{"square"},
             literal<double>{4}
         }
     };
