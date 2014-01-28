@@ -9,19 +9,30 @@ auto read(std::string const& input) -> value {
     (void) input;
     using namespace klmr::lisp;
 
-    return list{
-        symbol{"define"},
-        symbol{"double"},
+    static auto items = std::vector<value> {
         list{
-            symbol{"lambda"},
-            list{symbol{"n"}},
+            symbol{"define"},
+            symbol{"double"},
             list{
-                symbol{"*"},
-                symbol{"n"},
-                symbol{"n"}
+                symbol{"lambda"},
+                list{symbol{"n"}},
+                list{
+                    symbol{"*"},
+                    symbol{"n"},
+                    symbol{"n"}
+                }
             }
+        },
+
+        list{
+            symbol{"double"},
+            literal<double>{4}
         }
-    }; // FIXME placeholder
+    };
+
+    static auto current = 0u;
+
+    return current < items.size() ? items[current++] : value{nil}; // FIXME placeholder
 }
 
 auto get_global_environment() -> environment {
