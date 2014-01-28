@@ -27,8 +27,9 @@ inline auto operator !=(symbol const& lhs, symbol const& rhs) -> bool {
     return not (lhs == rhs);
 }
 
+template <typename T>
 struct literal {
-    double value;
+    T value;
 };
 
 enum class call_type { macro, call };
@@ -44,7 +45,9 @@ struct list;
 
 using value = boost::variant<
     symbol,
-    literal,
+    literal<bool>,
+    literal<double>,
+    literal<std::string>,
     boost::recursive_wrapper<macro>,
     boost::recursive_wrapper<call>,
     boost::recursive_wrapper<list>
@@ -104,8 +107,9 @@ inline auto as_symbol(value const& value) -> symbol {
     return boost::get<symbol>(value);
 }
 
-inline auto as_literal(value const& value) -> literal {
-    return boost::get<literal>(value);
+template <typename T>
+inline auto as_literal(value const& value) -> literal<T> {
+    return boost::get<literal<T>>(value);
 }
 
 inline auto as_list(value const& value) -> list {
@@ -114,7 +118,8 @@ inline auto as_list(value const& value) -> list {
 
 auto operator <<(std::ostream& out, symbol const& sym) -> std::ostream&;
 
-auto operator <<(std::ostream& out, literal const& lit) -> std::ostream&;
+template <typename T>
+auto operator <<(std::ostream& out, literal<T> const& lit) -> std::ostream&;
 
 auto operator <<(std::ostream& out, macro const& macro) -> std::ostream&;
 
@@ -122,7 +127,7 @@ auto operator <<(std::ostream& out, call const& call) -> std::ostream&;
 
 auto operator <<(std::ostream& out, list const& list) -> std::ostream&;
 
-extern const value nil;
+extern const list nil;
 
 } } // namespace klmr::lisp
 

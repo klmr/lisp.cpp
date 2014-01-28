@@ -35,7 +35,8 @@ struct eval_visitor : boost::static_visitor<value> {
         return env[sym];
     }
 
-    auto operator ()(literal const& lit) const -> value {
+    template <typename T>
+    auto operator ()(literal<T> const& lit) const -> value {
         return lit;
     }
 

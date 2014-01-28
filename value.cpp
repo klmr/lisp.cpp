@@ -24,11 +24,16 @@ auto callable<C>::operator ()(
 template struct callable<call_type::call>;
 template struct callable<call_type::macro>;
 
+template struct literal<bool>;
+template struct literal<double>;
+template struct literal<std::string>;
+
 auto operator <<(std::ostream& out, symbol const& sym) -> std::ostream& {
     return out << sym.repr;
 }
 
-auto operator <<(std::ostream& out, literal const& lit) -> std::ostream& {
+template <typename T>
+auto operator <<(std::ostream& out, literal<T> const& lit) -> std::ostream& {
     return out << lit.value;
 }
 
@@ -51,6 +56,6 @@ auto operator <<(std::ostream& out, list const& list) -> std::ostream& {
     return out << ')';
 }
 
-value const nil{};
+list const nil{};
 
 } } // namespace klmr::lisp
