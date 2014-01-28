@@ -1,7 +1,7 @@
 #include "eval.hpp"
 
 namespace klmr { namespace lisp {
-    
+
 struct eval_call_visitor : boost::static_visitor<value> {
     environment& env;
     list::const_range args;
@@ -13,11 +13,11 @@ struct eval_call_visitor : boost::static_visitor<value> {
         auto evaluated_args = std::vector<value>(std::distance(begin(args), end(args)));
         std::transform(begin(args), end(args), begin(evaluated_args),
             [this](value const& v) { return eval(v, env); });
-        return call(begin(evaluated_args), end(evaluated_args));
+        return call(env, begin(evaluated_args), end(evaluated_args));
     }
 
     auto operator ()(macro const& macro) const -> value {
-        return macro(begin(args), end(args));
+        return macro(env, begin(args), end(args));
     }
 
     template <typename T>
@@ -35,7 +35,8 @@ struct eval_visitor : boost::static_visitor<value> {
         return env[sym];
     }
 
-    auto operator ()(literal const& lit) const -> value {
+    template <typename T>
+    auto operator ()(literal<T> const& lit) const -> value {
         return lit;
     }
 

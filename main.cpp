@@ -11,6 +11,7 @@ auto read(std::string const& input) -> value {
 
     return list{
         symbol{"define"},
+        symbol{"double"},
         list{
             symbol{"lambda"},
             list{symbol{"n"}},
@@ -24,9 +25,28 @@ auto read(std::string const& input) -> value {
 }
 
 auto get_global_environment() -> environment {
-    using klmr::lisp::symbol;
+    using namespace klmr::lisp;
     auto env = environment{};
-    env.set(symbol{"lambda"}, symbol{"#lambda"});
+    env.set(symbol{"lambda"},
+        macro{env, {"args", "expr"},
+        [] (environment& env) {
+            auto&& args = as_list(env["args"]);
+            auto formals = std::vector<symbol>(length(args));
+            std::transform(begin(args), end(args), begin(formals), as_symbol);
+            auto expr = env["expr"];
+            // FIXME Capture by value incurs expensive copy. Solved in C++14.
+            return call{env, formals, [expr](environment& frame) {
+                return eval(expr, frame);
+            }};
+        }}
+    );
+    env.set(symbol{"define"},
+        macro{env, {"name", "expr"}, [] (environment& env) {
+            auto&& name = as_symbol(env["name"]);
+            env.set(name, eval(env["expr"], env));
+            return nil;
+        }}
+    );
     return env;
 }
 
