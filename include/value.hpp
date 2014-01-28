@@ -112,6 +112,16 @@ inline auto as_literal(value const& value) -> literal<T> {
     return boost::get<literal<T>>(value);
 }
 
+template <typename T>
+inline auto as_literal(T const& value) -> literal<T> {
+    return {value};
+}
+
+template <typename T>
+inline auto as_raw(value const& value) -> T {
+    return as_literal<T>(value).value;
+}
+
 inline auto as_list(value const& value) -> list {
     return boost::get<list>(value);
 }

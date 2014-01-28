@@ -29,4 +29,8 @@ auto environment::set(symbol const& sym, value val) -> void {
     frame.emplace(sym, std::forward<value>(val));
 }
 
+auto parent(environment const& env) -> environment* {
+    return env.parent;
+}
+
 } } // namespace klmr::lisp

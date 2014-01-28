@@ -38,9 +38,13 @@ auto read(std::string const& input) -> value {
 auto get_global_environment() -> environment {
     using namespace klmr::lisp;
     auto env = environment{};
+    env.set(symbol{"*"},
+        call{env, {"a", "b"}, [] (environment& env) {
+            return as_literal(as_raw<double>(env["a"]) * as_raw<double>(env["b"]));
+        }}
+    );
     env.set(symbol{"lambda"},
-        macro{env, {"args", "expr"},
-        [] (environment& env) {
+        macro{env, {"args", "expr"}, [] (environment& env) {
             auto&& args = as_list(env["args"]);
             auto formals = std::vector<symbol>(length(args));
             std::transform(begin(args), end(args), begin(formals), as_symbol);
@@ -54,7 +58,7 @@ auto get_global_environment() -> environment {
     env.set(symbol{"define"},
         macro{env, {"name", "expr"}, [] (environment& env) {
             auto&& name = as_symbol(env["name"]);
-            env.set(name, eval(env["expr"], env));
+            parent(env)->set(name, eval(env["expr"], env));
             return nil;
         }}
     );
