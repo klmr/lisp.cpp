@@ -56,6 +56,6 @@ auto operator <<(std::ostream& out, list const& list) -> std::ostream& {
     return out << ')';
 }
 
-list const nil{};
+list const nil{symbol{"quote"}, list{}};
 
 } } // namespace klmr::lisp

@@ -24,10 +24,16 @@ auto read(std::string const& input) -> value {
             }
         },
 
+        symbol{"square"},
+
         list{
             symbol{"square"},
             literal<double>{4}
-        }
+        },
+
+        literal<double>{42},
+
+        literal<std::string>{"Hello world!"},
     };
 
     static auto current = 0u;
@@ -41,6 +47,11 @@ auto get_global_environment() -> environment {
     env.set(symbol{"*"},
         call{env, {"a", "b"}, [] (environment& env) {
             return as_literal(as_raw<double>(env["a"]) * as_raw<double>(env["b"]));
+        }}
+    );
+    env.set(symbol{"quote"},
+        macro{env, {"expr"}, [] (environment& env) {
+            return env["expr"];
         }}
     );
     env.set(symbol{"lambda"},
@@ -59,7 +70,7 @@ auto get_global_environment() -> environment {
         macro{env, {"name", "expr"}, [] (environment& env) {
             auto&& name = as_symbol(env["name"]);
             parent(env)->set(name, eval(env["expr"], env));
-            return nil;
+            return eval(nil, env);
         }}
     );
     return env;
