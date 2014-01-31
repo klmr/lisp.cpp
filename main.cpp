@@ -1,11 +1,12 @@
 #include "eval.hpp"
 
 #include <iostream>
+#include <boost/optional.hpp>
 
 using klmr::lisp::value;
 using klmr::lisp::environment;
 
-auto read(std::string const& input) -> value {
+auto read(std::istream& input) -> boost::optional<value> {
     (void) input;
     using namespace klmr::lisp;
 
@@ -38,7 +39,10 @@ auto read(std::string const& input) -> value {
 
     static auto current = 0u;
 
-    return current < items.size() ? items[current++] : value{nil}; // FIXME placeholder
+    auto expr = boost::optional<value>{current < items.size(), items[current++]}; // FIXME placeholder
+    if (expr)
+        std::cout << *expr << '\n';
+    return expr;
 }
 
 auto get_global_environment() -> environment {
@@ -77,13 +81,14 @@ auto get_global_environment() -> environment {
 }
 
 auto repl(std::string prompt) -> void {
-    auto input = std::string{};
     auto global_env = get_global_environment();
+
     for (;;) {
         std::cout << prompt << std::flush;
-        if (not getline(std::cin, input))
+        auto&& expr = read(std::cin);
+        if (not expr)
             return;
-        auto&& result = eval(read(input), global_env);
+        auto&& result = eval(*expr, global_env);
         std::cout << result << '\n';
     }
 }
