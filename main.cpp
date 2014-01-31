@@ -54,9 +54,7 @@ auto get_global_environment() -> environment {
         }}
     );
     env.set(symbol{"quote"},
-        macro{env, {"expr"}, [] (environment& env) {
-            return env["expr"];
-        }}
+        macro{env, {"expr"}, [] (environment& env) { return env["expr"]; }}
     );
     env.set(symbol{"lambda"},
         macro{env, {"args", "expr"}, [] (environment& env) {
