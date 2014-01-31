@@ -74,6 +74,10 @@ inline auto values(list const& list) -> decltype(list.values) const& {
     return list.values;
 }
 
+inline auto empty(list const& list) -> bool {
+    return list.values.empty();
+}
+
 inline auto length(list const& list) -> std::size_t {
     return list.values.size();
 }
@@ -118,13 +122,20 @@ inline auto as_literal(T const& value) -> literal<T> {
 }
 
 template <typename T>
+inline auto as_raw(literal<T> const& value) -> T {
+    return value.value;
+}
+
+template <typename T>
 inline auto as_raw(value const& value) -> T {
-    return as_literal<T>(value).value;
+    return as_raw(as_literal<T>(value));
 }
 
 inline auto as_list(value const& value) -> list {
     return boost::get<list>(value);
 }
+
+auto is_true(value const& value) -> bool;
 
 auto operator <<(std::ostream& out, symbol const& sym) -> std::ostream&;
 
