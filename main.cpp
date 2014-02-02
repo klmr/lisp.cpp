@@ -49,6 +49,14 @@ auto get_global_environment() -> environment {
         }}
     );
 
+    env.add(symbol{"set!"},
+        macro{env, {"name", "expr"}, [] (environment& env) {
+            auto&& name = as_symbol(env["name"]);
+            (*parent(env))[name] = eval(env["expr"], *parent(env));
+            return eval(nil, env);
+        }}
+    );
+
     return env;
 }
 
