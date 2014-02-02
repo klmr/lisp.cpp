@@ -30,6 +30,9 @@ inline auto operator !=(symbol const& lhs, symbol const& rhs) -> bool {
 template <typename T>
 struct literal {
     T value;
+
+    literal() = default;
+    literal(T const& value) : value{value} {}
 };
 
 enum class call_type { macro, call };
@@ -100,7 +103,7 @@ struct callable {
     callable(environment& parent, std::vector<symbol> const& formals, function_type lambda);
 
     // FIXME This leaks memory for “upward funargs”.
-    environment& parent;
+    environment* parent;
     std::vector<symbol> formals;
     function_type lambda;
 
