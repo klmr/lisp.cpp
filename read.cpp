@@ -14,49 +14,62 @@
 
 #include <boost/optional.hpp>
 
-using namespace boost::spirit::qi;
-namespace lisp = klmr::lisp;
+namespace qi = boost::spirit::qi;
 
-BOOST_FUSION_ADAPT_STRUCT(lisp::symbol, (std::string, repr))
-BOOST_FUSION_ADAPT_STRUCT(lisp::literal<bool>, (bool, value))
-BOOST_FUSION_ADAPT_STRUCT(lisp::literal<double>, (double, value))
-BOOST_FUSION_ADAPT_STRUCT(lisp::literal<std::string>, (std::string, value))
-BOOST_FUSION_ADAPT_STRUCT(lisp::list, (std::vector<lisp::value>, values))
+BOOST_FUSION_ADAPT_STRUCT(klmr::lisp::symbol, (std::string, repr))
+BOOST_FUSION_ADAPT_STRUCT(klmr::lisp::literal<bool>, (bool, value))
+BOOST_FUSION_ADAPT_STRUCT(klmr::lisp::literal<double>, (double, value))
+BOOST_FUSION_ADAPT_STRUCT(klmr::lisp::literal<std::string>, (std::string, value))
+BOOST_FUSION_ADAPT_STRUCT(klmr::lisp::list, (std::vector<klmr::lisp::value>, values))
+
+namespace klmr { namespace lisp {
 
 template <typename Iterator>
-struct lisp_grammar : grammar<Iterator, lisp::value(), ascii::space_type> {
+struct lisp_grammar : qi::grammar<Iterator, value(), qi::ascii::space_type> {
     template <typename Signature>
-    using rule_t = rule<Iterator, Signature, ascii::space_type>;
+    using rule_t = qi::rule<Iterator, Signature, qi::ascii::space_type>;
 
-    rule_t<lisp::value()> start;
-    rule_t<lisp::symbol()> symbol;
-    rule_t<lisp::value()> literal;
-    rule_t<lisp::literal<bool>()> boolean;
-    rule_t<lisp::literal<double>()> number;
-    rule_t<lisp::literal<std::string>()> string;
-    rule_t<lisp::list()> list;
+    rule_t<value()> start;
+    rule_t<symbol()> sym;
+    rule_t<value()> lit;
+    rule_t<literal<bool>()> boolean;
+    rule_t<literal<double>()> number;
+    rule_t<literal<std::string>()> string;
+    rule_t<list()> lst;
 
     lisp_grammar() : lisp_grammar::base_type{start} {
-        start %= symbol | literal | list;
-        symbol %= eps >> lexeme[+(char_("A-Za-z") | '-' | char_("+*/%~&|^!=<>?"))];
-        literal %= boolean | number | string;
+        using namespace qi;
+        using namespace boost::phoenix;
+        start %= sym | lit | lst;
+        sym %= eps >> lexeme[+(char_("A-Za-z") | '-' | char_("+*/%~&|^!=<>?"))];
+        lit %= boolean | number | string;
         boolean %=
-            lit("#t")[_val = boost::phoenix::construct<lisp::literal<bool>>(true)] |
-            lit("#f")[_val = boost::phoenix::construct<lisp::literal<bool>>(false)];
+            qi::lit("#t")[_val = construct<literal<bool>>(true)] |
+            qi::lit("#f")[_val = construct<literal<bool>>(false)];
         number %= double_;
         string %= eps >> lexeme['"' >> *(char_ - '"') >> '"'];
-        list %= '(' >> *start >> ')';
+        lst %= '(' >> *start >> ')';
     }
 };
 
-auto read(std::istream& input) -> boost::optional<lisp::value> {
-    using underlying_t = std::istreambuf_iterator<char>;
-    using iterator_t = boost::spirit::multi_pass<underlying_t>;
-
-    static lisp_grammar<iterator_t> grammar{};
-    auto output = lisp::value{};
-    auto begin = boost::spirit::make_default_multi_pass(underlying_t{input});
-    auto const end = boost::spirit::make_default_multi_pass(underlying_t{});
-    auto success = phrase_parse(begin, end, grammar, ascii::space, output) and begin == end;
-    return boost::optional<lisp::value>{success, output};
+template <typename Iterator>
+auto read(Iterator& begin, Iterator end) -> boost::optional<value> {
+    static lisp_grammar<Iterator> grammar{};
+    auto output = value{};
+    auto success = phrase_parse(begin, end, grammar, qi::ascii::space, output);
+    return boost::optional<value>{success, output};
 }
+
+template auto read<std::string::iterator>(std::string::iterator&, std::string::iterator)
+    -> boost::optional<value>;
+
+namespace detail {
+using underlying_t = std::istreambuf_iterator<char>;
+}
+
+using stream_iterator_t = boost::spirit::multi_pass<detail::underlying_t>;
+
+template auto read<stream_iterator_t>(stream_iterator_t&, stream_iterator_t)
+    -> boost::optional<value>;
+
+} } // namespace klmr::lisp
