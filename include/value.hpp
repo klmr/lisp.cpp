@@ -30,6 +30,9 @@ inline auto operator !=(symbol const& lhs, symbol const& rhs) -> bool {
 template <typename T>
 struct literal {
     T value;
+
+    literal() = default;
+    literal(T const& value) : value{value} {}
 };
 
 enum class call_type { macro, call };
@@ -74,6 +77,10 @@ inline auto values(list const& list) -> decltype(list.values) const& {
     return list.values;
 }
 
+inline auto empty(list const& list) -> bool {
+    return list.values.empty();
+}
+
 inline auto length(list const& list) -> std::size_t {
     return list.values.size();
 }
@@ -96,7 +103,7 @@ struct callable {
     callable(environment& parent, std::vector<symbol> const& formals, function_type lambda);
 
     // FIXME This leaks memory for “upward funargs”.
-    environment& parent;
+    environment* parent;
     std::vector<symbol> formals;
     function_type lambda;
 
@@ -112,9 +119,26 @@ inline auto as_literal(value const& value) -> literal<T> {
     return boost::get<literal<T>>(value);
 }
 
+template <typename T>
+inline auto as_literal(T const& value) -> literal<T> {
+    return {value};
+}
+
+template <typename T>
+inline auto as_raw(literal<T> const& value) -> T {
+    return value.value;
+}
+
+template <typename T>
+inline auto as_raw(value const& value) -> T {
+    return as_raw(as_literal<T>(value));
+}
+
 inline auto as_list(value const& value) -> list {
     return boost::get<list>(value);
 }
+
+auto is_true(value const& value) -> bool;
 
 auto operator <<(std::ostream& out, symbol const& sym) -> std::ostream&;
 

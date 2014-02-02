@@ -1,35 +1,28 @@
 #include "eval.hpp"
+#include "read.hpp"
 
 #include <iostream>
+#include <boost/optional.hpp>
 
 using klmr::lisp::value;
 using klmr::lisp::environment;
 
-auto read(std::string const& input) -> value {
-    (void) input;
-    using namespace klmr::lisp;
-
-    return list{
-        symbol{"define"},
-        symbol{"double"},
-        list{
-            symbol{"lambda"},
-            list{symbol{"n"}},
-            list{
-                symbol{"*"},
-                symbol{"n"},
-                symbol{"n"}
-            }
-        }
-    }; // FIXME placeholder
-}
-
 auto get_global_environment() -> environment {
     using namespace klmr::lisp;
     auto env = environment{};
+
+    env.set(symbol{"*"},
+        call{env, {"a", "b"}, [] (environment& env) {
+            return as_literal(as_raw<double>(env["a"]) * as_raw<double>(env["b"]));
+        }}
+    );
+
+    env.set(symbol{"quote"},
+        macro{env, {"expr"}, [] (environment& env) { return env["expr"]; }}
+    );
+
     env.set(symbol{"lambda"},
-        macro{env, {"args", "expr"},
-        [] (environment& env) {
+        macro{env, {"args", "expr"}, [] (environment& env) {
             auto&& args = as_list(env["args"]);
             auto formals = std::vector<symbol>(length(args));
             std::transform(begin(args), end(args), begin(formals), as_symbol);
@@ -40,24 +33,37 @@ auto get_global_environment() -> environment {
             }};
         }}
     );
+
     env.set(symbol{"define"},
         macro{env, {"name", "expr"}, [] (environment& env) {
             auto&& name = as_symbol(env["name"]);
-            env.set(name, eval(env["expr"], env));
-            return nil;
+            parent(env)->set(name, eval(env["expr"], *parent(env)));
+            return eval(nil, env);
+        }}
+    );
+
+    env.set(symbol{"if"},
+        macro{env, {"cond", "conseq", "alt"}, [] (environment& env) {
+            auto&& cond = eval(env["cond"], *parent(env));
+            return eval(is_true(cond) ? env["conseq"] : env["alt"], *parent(env));
         }}
     );
     return env;
 }
 
 auto repl(std::string prompt) -> void {
-    auto input = std::string{};
     auto global_env = get_global_environment();
+
     for (;;) {
         std::cout << prompt << std::flush;
-        if (not getline(std::cin, input))
+        auto line = std::string{};
+        if (not getline(std::cin, line))
             return;
-        auto&& result = eval(read(input), global_env);
+
+        auto&& expr = klmr::lisp::read_full(begin(line), end(line));
+        if (not expr)
+            return;
+        auto&& result = eval(*expr, global_env);
         std::cout << result << '\n';
     }
 }
