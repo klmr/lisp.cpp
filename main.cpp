@@ -1,59 +1,11 @@
 #include "eval.hpp"
+#include "read.hpp"
 
 #include <iostream>
 #include <boost/optional.hpp>
 
 using klmr::lisp::value;
 using klmr::lisp::environment;
-
-auto read(std::istream& input) -> boost::optional<value> {
-    (void) input;
-    using namespace klmr::lisp;
-
-    static auto items = std::vector<value> {
-        list{
-            symbol{"define"},
-            symbol{"square"},
-            list{
-                symbol{"lambda"},
-                list{symbol{"n"}},
-                list{
-                    symbol{"*"},
-                    symbol{"n"},
-                    symbol{"n"}
-                }
-            }
-        },
-
-        symbol{"square"},
-
-        list{
-            symbol{"square"},
-            literal<double>{4}
-        },
-
-        literal<double>{42},
-
-        literal<std::string>{"Hello world!"},
-
-        list{
-            symbol{"square"},
-            list{
-                symbol{"if"},
-                nil,
-                literal<double>{1},
-                literal<double>{2}
-            }
-        }
-    };
-
-    static auto current = 0u;
-
-    auto expr = boost::optional<value>{current < items.size(), items[current++]}; // FIXME placeholder
-    if (expr)
-        std::cout << *expr << '\n';
-    return expr;
-}
 
 auto get_global_environment() -> environment {
     using namespace klmr::lisp;
@@ -104,7 +56,11 @@ auto repl(std::string prompt) -> void {
 
     for (;;) {
         std::cout << prompt << std::flush;
-        auto&& expr = read(std::cin);
+        auto line = std::string{};
+        if (not getline(std::cin, line))
+            return;
+
+        auto&& expr = klmr::lisp::read_full(begin(line), end(line));
         if (not expr)
             return;
         auto&& result = eval(*expr, global_env);
