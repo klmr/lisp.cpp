@@ -18,7 +18,8 @@ auto get_global_environment() -> environment {
     );
 
     env.add(symbol{"quote"},
-        macro{env, {"expr"}, [] (environment& env) { return env["expr"]; }}
+        macro{env, std::vector<symbol>{"expr"},
+            [] (environment& env) { return env["expr"]; }}
     );
 
     env.add(symbol{"lambda"},
@@ -54,6 +55,15 @@ auto get_global_environment() -> environment {
             auto&& name = as_symbol(env["name"]);
             (*parent(env))[name] = eval(env["expr"], *parent(env));
             return eval(nil, env);
+        }}
+    );
+
+    env.add(symbol{"begin"},
+        macro{env, "args", [] (environment& env) {
+            auto&& result = value{};
+            for (auto&& expr : as_list(env["args"]))
+                result = eval(expr, *parent(env));
+            return result;
         }}
     );
 

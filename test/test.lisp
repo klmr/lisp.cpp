@@ -8,3 +8,7 @@ square
 x
 (set! x (* x 2))
 x
+(set! x 1)
+x
+(begin (set! x (* x 2)) (set! x (* x 2)) x)
+"All tests passed!"
