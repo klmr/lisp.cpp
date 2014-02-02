@@ -1,5 +1,6 @@
 #include "value.hpp"
 
+#include <iterator>
 #include <string>
 
 #include <boost/spirit/include/qi.hpp>
@@ -8,6 +9,7 @@
 #include <boost/spirit/include/phoenix_operator.hpp>
 #include <boost/spirit/home/phoenix/object/construct.hpp>
 #include <boost/spirit/include/phoenix_fusion.hpp>
+#include <boost/spirit/include/support_multi_pass.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
 
 #include <boost/optional.hpp>
@@ -48,25 +50,13 @@ struct lisp_grammar : grammar<Iterator, lisp::value(), ascii::space_type> {
 };
 
 auto read(std::istream& input) -> boost::optional<lisp::value> {
-    static lisp_grammar<std::string::iterator> grammar{};
-    auto output = lisp::value{};
-    //auto&& success = input >> phrase_match(grammar, ascii::space, output);
-    //DEBUG
-    auto in = std::string{};
-    getline(input, in);
-    auto e = end(in);
-    auto&& success = phrase_parse(begin(in), e, grammar, ascii::space, output);
-    //\DEBUG
-    return boost::optional<lisp::value>{success, output};
-}
+    using underlying_t = std::istreambuf_iterator<char>;
+    using iterator_t = boost::spirit::multi_pass<underlying_t>;
 
-auto main() -> int {
-    auto prompt = ">>> ";
-    for (;;) {
-        std::cout << prompt << std::flush;
-        auto&& expr = read(std::cin);
-        if (not expr)
-            break;
-        std::cout << *expr << '\n';
-    }
+    static lisp_grammar<iterator_t> grammar{};
+    auto output = lisp::value{};
+    auto begin = boost::spirit::make_default_multi_pass(underlying_t{input});
+    auto const end = boost::spirit::make_default_multi_pass(underlying_t{});
+    auto success = phrase_parse(begin, end, grammar, ascii::space, output) and begin == end;
+    return boost::optional<lisp::value>{success, output};
 }
