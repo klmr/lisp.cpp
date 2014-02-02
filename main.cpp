@@ -11,17 +11,17 @@ auto get_global_environment() -> environment {
     using namespace klmr::lisp;
     auto env = environment{};
 
-    env.set(symbol{"*"},
+    env.add(symbol{"*"},
         call{env, {"a", "b"}, [] (environment& env) {
             return as_literal(as_raw<double>(env["a"]) * as_raw<double>(env["b"]));
         }}
     );
 
-    env.set(symbol{"quote"},
+    env.add(symbol{"quote"},
         macro{env, {"expr"}, [] (environment& env) { return env["expr"]; }}
     );
 
-    env.set(symbol{"lambda"},
+    env.add(symbol{"lambda"},
         macro{env, {"args", "expr"}, [] (environment& env) {
             auto&& args = as_list(env["args"]);
             auto formals = std::vector<symbol>(length(args));
@@ -34,20 +34,21 @@ auto get_global_environment() -> environment {
         }}
     );
 
-    env.set(symbol{"define"},
+    env.add(symbol{"define"},
         macro{env, {"name", "expr"}, [] (environment& env) {
             auto&& name = as_symbol(env["name"]);
-            parent(env)->set(name, eval(env["expr"], *parent(env)));
+            parent(env)->add(name, eval(env["expr"], *parent(env)));
             return eval(nil, env);
         }}
     );
 
-    env.set(symbol{"if"},
+    env.add(symbol{"if"},
         macro{env, {"cond", "conseq", "alt"}, [] (environment& env) {
             auto&& cond = eval(env["cond"], *parent(env));
             return eval(is_true(cond) ? env["conseq"] : env["alt"], *parent(env));
         }}
     );
+
     return env;
 }
 
