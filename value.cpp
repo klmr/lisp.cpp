@@ -10,7 +10,7 @@ callable<C>::callable(
         environment& parent,
         std::vector<symbol> const& formals,
         typename callable<C>::function_type lambda)
-    : parent{parent}, formals{formals}, lambda{lambda} {}
+    : parent{&parent}, formals{formals}, lambda{lambda} {}
 
 template <call_type C>
 auto callable<C>::operator ()(
