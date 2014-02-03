@@ -41,7 +41,7 @@ struct lisp_grammar : qi::grammar<Iterator, value(), qi::ascii::space_type> {
         using namespace qi;
         using namespace boost::phoenix;
         start %= sym | lit | lst;
-        sym %= eps >> lexeme[+(char_("A-Za-z") | '-' | char_("+*/%~&|^!=<>?"))];
+        sym %= eps >> lexeme[+(char_("A-Za-z") | char_('-') | char_("+*/%~&|^!=<>?"))];
         lit %= boolean | number | string;
         boolean %=
             qi::lit("#t")[_val = construct<literal<bool>>(true)] |
