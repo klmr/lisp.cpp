@@ -19,7 +19,7 @@ struct environment {
 
     auto operator [](symbol const& sym) -> value&;
 
-    auto set(symbol const& sym, value val) -> void;
+    auto add(symbol const& sym, value val) -> void;
 
     friend auto parent(environment const&) -> environment*;
 

@@ -13,11 +13,40 @@ callable<C>::callable(
     : parent{&parent}, formals{formals}, lambda{lambda} {}
 
 template <call_type C>
+callable<C>::callable(
+        environment& parent,
+        symbol const& arglist,
+        typename callable<C>::function_type lambda)
+    : parent{&parent}, formals{arglist}, lambda{lambda} {}
+
+template <typename Iter>
+struct make_env : boost::static_visitor<environment> {
+    environment& env;
+    Iter begin;
+    Iter end;
+
+    make_env(environment& env, Iter begin, Iter end)
+        : env{env}, begin{begin}, end{end} {}
+
+    auto operator ()(symbol const& arglist) const -> environment {
+        auto argpack = std::vector<value>{list(begin, end)};
+        return environment{env, {arglist}, argpack.begin(), argpack.end()};
+    }
+
+    auto operator ()(std::vector<symbol> const& formals) const -> environment {
+        return environment{env, formals, begin, end};
+    }
+};
+
+template <call_type C>
 auto callable<C>::operator ()(
         environment& env,
         iterator begin,
         iterator end) const -> value {
-    environment frame(env, formals, begin, end);
+    // If `formals` happens to be an identifier then we need to construct a
+    // `list` of arguments first, and pass that as the one argument to the
+    // constructor of `environment`.
+    auto&& frame = boost::apply_visitor(make_env<iterator>{env, begin, end}, formals);
     return lambda(frame);
 }
 

@@ -12,7 +12,7 @@ environment::environment(
         : parent{&parent} {
     assert(static_cast<decltype(formals.size())>(std::distance(a, b)) == formals.size());
     for (auto&& sym : formals)
-        set(sym, *a++);
+        add(sym, *a++);
 }
 
 auto environment::operator[](symbol const& sym) -> value& {
@@ -25,7 +25,7 @@ auto environment::operator[](symbol const& sym) -> value& {
     throw name_error{sym};
 }
 
-auto environment::set(symbol const& sym, value val) -> void {
+auto environment::add(symbol const& sym, value val) -> void {
     frame.emplace(sym, std::forward<value>(val));
 }
 
