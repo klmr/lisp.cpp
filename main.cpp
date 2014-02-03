@@ -2,6 +2,8 @@
 #include "read.hpp"
 
 #include <iostream>
+#include <iterator>
+#include <numeric>
 #include <boost/optional.hpp>
 
 using klmr::lisp::value;
@@ -11,11 +13,27 @@ auto get_global_environment() -> environment {
     using namespace klmr::lisp;
     auto env = environment{};
 
-    env.add(symbol{"*"},
-        call{env, {"a", "b"}, [] (environment& env) {
-            return as_literal(as_raw<double>(env["a"]) * as_raw<double>(env["b"]));
-        }}
-    );
+#   define VAR_OPERATOR(name, op, type) \
+    env.add(symbol{name}, \
+        call{env, "args", [] (environment& env) { \
+            auto&& args = as_list(env["args"]); \
+            return std::accumulate( \
+                std::next(begin(args)), end(args), \
+                *begin(args), [] (value const& a, value const& b) { \
+                    return literal<type>{as_raw<type>(a) op as_raw<type>(b)}; \
+                }); \
+        }} \
+    )
+
+    VAR_OPERATOR("+", +, double);
+    VAR_OPERATOR("-", -, double);
+    VAR_OPERATOR("*", *, double);
+    VAR_OPERATOR("/", /, double);
+    VAR_OPERATOR("and", &&, bool);
+    VAR_OPERATOR("or", ||, bool);
+    // TODO Implement remaining (non-variadic) operators
+
+#   undef VAR_OPERATOR
 
     env.add(symbol{"quote"},
         macro{env, std::vector<symbol>{"expr"},
