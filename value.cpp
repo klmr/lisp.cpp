@@ -87,6 +87,11 @@ auto operator <<(std::ostream& out, literal<T> const& lit) -> std::ostream& {
     return out << lit.value;
 }
 
+template <>
+auto operator << <bool>(std::ostream& out, literal<bool> const& lit) -> std::ostream& {
+    return out << (as_raw(lit) ? "#t" : "#f");
+}
+
 auto operator <<(std::ostream& out, macro const&) -> std::ostream& {
     return out << "#macro";
 }
