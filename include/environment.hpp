@@ -2,15 +2,12 @@
 #define KLMR_LISP_CPP_ENVIRONMENT_HPP
 
 #include "value.hpp"
+#include "error.hpp"
 
 #include <unordered_map>
 #include <vector>
 
 namespace klmr { namespace lisp {
-
-struct name_error : std::logic_error {
-    name_error(symbol sym) : std::logic_error{"Not found: " + sym.repr} {}
-};
 
 struct environment {
     environment(environment* parent = nullptr) : parent{parent} {}

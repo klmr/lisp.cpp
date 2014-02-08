@@ -1,5 +1,6 @@
 #include "eval.hpp"
 #include "read.hpp"
+#include "error.hpp"
 
 #include <iostream>
 #include <iterator>
@@ -18,18 +19,19 @@ auto repl(std::string prompt) -> void {
         if (not getline(std::cin, line))
             return;
 
-        auto&& expr = klmr::lisp::read_full(begin(line), end(line));
-        if (not expr)
-            return;
-        auto&& result = eval(*expr, global_env);
-        std::cout << result << '\n';
+        try {
+            auto&& expr = klmr::lisp::read_full(begin(line), end(line));
+            if (not expr)
+                return;
+            auto&& result = eval(*expr, global_env);
+            std::cout << result << '\n';
+        }
+        catch (klmr::lisp::error const& err) {
+            std::cerr << err.what() << '\n';
+        }
     }
 }
 
-auto main() -> int
-try {
+auto main() -> int {
     repl(">>> ");
-} catch (klmr::lisp::name_error const& msg) {
-    std::cerr << msg.what() << '\n';
-    return 1;
 }

@@ -157,6 +157,8 @@ auto operator <<(std::ostream& out, call const& call) -> std::ostream&;
 
 auto operator <<(std::ostream& out, list const& list) -> std::ostream&;
 
+auto to_string(value const& val) ->  std::string;
+
 extern const list nil;
 
 } } // namespace klmr::lisp
