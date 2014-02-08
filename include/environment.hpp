@@ -17,6 +17,10 @@ struct environment {
 
     environment(environment&, std::vector<symbol>, call::iterator a, call::iterator b);
 
+    environment(environment const&) = delete;
+
+    environment(environment&&) = default;
+
     auto operator [](symbol const& sym) -> value&;
 
     auto add(symbol const& sym, value val) -> void;
@@ -27,6 +31,8 @@ private:
     std::unordered_map<symbol, value> frame;
     environment* parent;
 };
+
+auto get_global_environment() -> environment;
 
 } } // namespace klmr::lisp
 
