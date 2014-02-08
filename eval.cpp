@@ -42,6 +42,8 @@ struct eval_visitor : boost::static_visitor<value> {
     }
 
     auto operator ()(list const& cons) const -> value {
+        if (empty(cons))
+            throw invalid_node{cons, "non-empty list"};
         auto&& call = eval(head(cons), env);
         return boost::apply_visitor(eval_call_visitor{env, tail(cons)}, call);
     }
