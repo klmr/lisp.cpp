@@ -1,5 +1,6 @@
 #include "eval.hpp"
 #include "read.hpp"
+#include "error.hpp"
 
 #include <iostream>
 #include <iterator>
@@ -29,7 +30,7 @@ auto repl(std::string prompt) -> void {
 auto main() -> int
 try {
     repl(">>> ");
-} catch (klmr::lisp::name_error const& msg) {
-    std::cerr << msg.what() << '\n';
+} catch (klmr::lisp::error const& err) {
+    std::cerr << err.what() << '\n';
     return 1;
 }

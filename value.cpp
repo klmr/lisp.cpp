@@ -2,6 +2,7 @@
 #include "environment.hpp"
 
 #include <iostream>
+#include <sstream>
 
 namespace klmr { namespace lisp {
 
@@ -104,6 +105,12 @@ auto operator <<(std::ostream& out, list const& list) -> std::ostream& {
         out << value;
     }
     return out << ')';
+}
+
+auto to_string(value const& val) -> std::string {
+    std::ostringstream ostr;
+    ostr << val;
+    return ostr.str();
 }
 
 list const nil{symbol{"quote"}, list{}};
