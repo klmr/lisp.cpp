@@ -1,6 +1,7 @@
 #include "environment.hpp"
 #include "eval.hpp"
 
+#include <functional>
 #include <numeric>
 #include <utility>
 #include <vector>
@@ -35,16 +36,22 @@ auto parent(environment const& env) -> environment* {
     return env.parent;
 }
 
-struct value_equals : boost::static_visitor<bool> {
+template <typename R, template<typename> class Op>
+struct binary_operation : boost::static_visitor<R> {
     template <typename T>
-    auto operator ()(literal<T> const& a, literal<T> const& b) const -> bool {
-        return as_raw(a) == as_raw(b);
+    auto operator ()(literal<T> const& a, literal<T> const& b) const -> R {
+        return Op<T>{}(as_raw(a), as_raw(b));
     }
 
     template <typename T, typename U>
-    auto operator ()(T const&, U const&) const -> bool {
+    auto operator ()(T const&, U const&) const -> R {
         throw value_error{"Mismatching operand types for =="};
     }
+};
+
+template <typename T>
+struct not_equal_to : std::binary_negate<std::equal_to<T>> {
+    not_equal_to() : std::binary_negate<std::equal_to<T>>{std::equal_to<T>{}} {}
 };
 
 auto get_global_environment() -> environment {
@@ -72,13 +79,23 @@ auto get_global_environment() -> environment {
 
 #   undef VAR_OPERATOR
 
-    env.add(symbol{"=="},
-        call{env, {"a", "b"}, [] (environment& env) {
-            auto&& a = env["a"];
-            auto&& b = env["b"];
-            return literal<bool>{boost::apply_visitor(value_equals{}, a, b)};
-        }}
-    );
+#   define BIN_OPERATOR(name, op, ret) \
+    env.add(symbol{name}, \
+        call{env, {"a", "b"}, [] (environment& env) { \
+            auto&& a = env["a"]; \
+            auto&& b = env["b"]; \
+            return literal<ret>{boost::apply_visitor(binary_operation<ret, op>{}, a, b)}; \
+        }} \
+    )
+
+    BIN_OPERATOR("==", std::equal_to, bool);
+    BIN_OPERATOR("!=", not_equal_to, bool);
+    BIN_OPERATOR("<", std::less, bool);
+    BIN_OPERATOR(">", std::greater, bool);
+    BIN_OPERATOR("<=", std::less_equal, bool);
+    BIN_OPERATOR(">=", std::greater_equal, bool);
+
+#   undef BIN_OPERATOR
 
     env.add(symbol{"quote"},
         macro{env, std::vector<symbol>{"expr"},
