@@ -10,5 +10,6 @@ x
 x
 (set! x 1)
 x
-(begin (set! x (* x 2)) (set! x (* x 2)) x)
+(begin (set! x (+ x 1)) (set! x (+ x 1)) x)
+(not (!= x 3))
 "All tests passed!"

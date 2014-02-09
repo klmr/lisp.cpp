@@ -96,6 +96,12 @@ auto get_global_environment() -> environment {
 
 #   undef BIN_OPERATOR
 
+    env.add(symbol{"not"},
+        call{env, std::vector<symbol>{"a"}, [] (environment& env) {
+            return literal<bool>{not as_raw<bool>(env["a"])};
+        }}
+    );
+
     env.add(symbol{"quote"},
         macro{env, std::vector<symbol>{"expr"},
             [] (environment& env) { return env["expr"]; }}
