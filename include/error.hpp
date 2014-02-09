@@ -12,15 +12,19 @@ struct error : std::logic_error {
 };
 
 struct name_error : error {
-    name_error(symbol sym) : error{"Name not found: " + sym.repr} {}
+    name_error(symbol const& sym) : error{"Name not found: " + sym.repr} {}
 };
 
 struct invalid_node : error {
-    invalid_node(value val)
+    invalid_node(value const& val)
         : error{"Unexpected value " + to_string(val) + " at this place"} {}
 
-    invalid_node(value val, std::string const& expected)
+    invalid_node(value const& val, std::string const& expected)
         : error{"Invalid value " + to_string(val) + ", expected " + expected} {}
+};
+
+struct value_error : error {
+    value_error(std::string const& str) : error{str} {}
 };
 
 } } // namespace klmr::lisp
