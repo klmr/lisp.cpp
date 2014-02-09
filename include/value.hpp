@@ -116,33 +116,21 @@ struct callable {
     auto operator ()(environment& env, iterator begin, iterator end) const -> value;
 };
 
-inline auto as_symbol(value const& value) -> symbol {
-    return boost::get<symbol>(value);
-}
+auto as_symbol(value const& value) -> symbol;
 
 template <typename T>
-inline auto as_literal(value const& value) -> literal<T> {
-    return boost::get<literal<T>>(value);
-}
+auto as_literal(value const& value) -> literal<T>;
 
 template <typename T>
-inline auto as_literal(T const& value) -> literal<T> {
-    return {value};
-}
+auto as_literal(T const& value) -> literal<T>;
 
 template <typename T>
-inline auto as_raw(literal<T> const& value) -> T {
-    return value.value;
-}
+auto as_raw(literal<T> const& value) -> T;
 
 template <typename T>
-inline auto as_raw(value const& value) -> T {
-    return as_raw(as_literal<T>(value));
-}
+auto as_raw(value const& value) -> T;
 
-inline auto as_list(value const& value) -> list {
-    return boost::get<list>(value);
-}
+auto as_list(value const& value) -> list;
 
 auto is_true(value const& value) -> bool;
 
