@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <numeric>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -13,7 +14,12 @@ environment::environment(
         std::vector<symbol> formals,
         call::iterator a, call::iterator b)
         : parent{&parent} {
-    assert(static_cast<decltype(formals.size())>(std::distance(a, b)) == formals.size());
+    auto argsize = formals.size();
+    auto paramsize = static_cast<decltype(formals.size())>(std::distance(a, b));
+    if (argsize != paramsize)
+        throw value_error{"Expected " + std::to_string(argsize) +
+            " arguments, got " + std::to_string(paramsize)};
+
     for (auto&& sym : formals)
         add(sym, *a++);
 }
@@ -64,7 +70,7 @@ auto get_global_environment() -> environment {
             return std::accumulate( \
                 std::next(begin(args)), end(args), \
                 *begin(args), [] (value const& a, value const& b) { \
-                    return literal<type>{as_raw<type>(a) op as_raw<type>(b)}; \
+                    return as_literal(as_raw<type>(a) op as_raw<type>(b)); \
                 }); \
         }} \
     )
@@ -83,7 +89,7 @@ auto get_global_environment() -> environment {
         call{env, {"a", "b"}, [] (environment& env) { \
             auto&& a = env["a"]; \
             auto&& b = env["b"]; \
-            return literal<ret>{boost::apply_visitor(binary_operation<ret, op>{}, a, b)}; \
+            return as_literal(boost::apply_visitor(binary_operation<ret, op>{}, a, b)); \
         }} \
     )
 
@@ -98,7 +104,7 @@ auto get_global_environment() -> environment {
 
     env.add(symbol{"not"},
         call{env, std::vector<symbol>{"a"}, [] (environment& env) {
-            return literal<bool>{not as_raw<bool>(env["a"])};
+            return as_literal(not as_raw<bool>(env["a"]));
         }}
     );
 

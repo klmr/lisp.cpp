@@ -73,6 +73,53 @@ struct is_true_visitor : boost::static_visitor<bool> {
     }
 };
 
+auto as_symbol(value const& value) -> symbol {
+    return boost::get<symbol>(value);
+}
+
+template <typename T>
+auto as_literal(value const& value) -> literal<T> try {
+    return boost::get<literal<T>>(value);
+}
+catch (boost::bad_get const& err) {
+    throw value_error{"Invalid argument type"};
+}
+
+template auto as_literal<bool>(value const&) -> literal<bool>;
+template auto as_literal<double>(value const&) -> literal<double>;
+template auto as_literal<std::string>(value const&) -> literal<std::string>;
+
+template <typename T>
+auto as_literal(T const& value) -> literal<T> {
+    return {value};
+}
+
+template auto as_literal<bool>(bool const&) -> literal<bool>;
+template auto as_literal<double>(double const&) -> literal<double>;
+template auto as_literal<std::string>(std::string const&) -> literal<std::string>;
+
+template <typename T>
+auto as_raw(literal<T> const& value) -> T {
+    return value.value;
+}
+
+template auto as_raw<bool>(literal<bool> const&) -> bool;
+template auto as_raw<double>(literal<double> const&) -> double;
+template auto as_raw<std::string>(literal<std::string> const&) -> std::string;
+
+template <typename T>
+auto as_raw(value const& value) -> T {
+    return as_raw(as_literal<T>(value));
+}
+
+template auto as_raw<bool>(value const&) -> bool;
+template auto as_raw<double>(value const&) -> double;
+template auto as_raw<std::string>(value const&) -> std::string;
+
+auto as_list(value const& value) -> list {
+    return boost::get<list>(value);
+}
+
 auto is_true(value const& value) -> bool {
     // We call “false” a boolean `#f` literal and the empty list. Everything
     // else is “true”.
