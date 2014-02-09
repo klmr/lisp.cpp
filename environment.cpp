@@ -75,7 +75,6 @@ auto get_global_environment() -> environment {
     VAR_OPERATOR("/", /, double);
     VAR_OPERATOR("and", &&, bool);
     VAR_OPERATOR("or", ||, bool);
-    // TODO Implement remaining (non-variadic) operators
 
 #   undef VAR_OPERATOR
 
