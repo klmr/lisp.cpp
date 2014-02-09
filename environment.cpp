@@ -45,7 +45,7 @@ struct binary_operation : boost::static_visitor<R> {
 
     template <typename T, typename U>
     auto operator ()(T const&, U const&) const -> R {
-        throw value_error{"Mismatching operand types for =="};
+        throw value_error{"Mismatching or invalid operand types"};
     }
 };
 
@@ -99,6 +99,20 @@ auto get_global_environment() -> environment {
     env.add(symbol{"not"},
         call{env, std::vector<symbol>{"a"}, [] (environment& env) {
             return literal<bool>{not as_raw<bool>(env["a"])};
+        }}
+    );
+
+    env.add(symbol{"empty?"},
+        call{env, std::vector<symbol>{"a"}, [] (environment& env) {
+            auto&& a = as_list(env["a"]);
+            return as_literal(empty(a));
+        }}
+    );
+
+    env.add(symbol{"length"},
+        call{env, std::vector<symbol>{"a"}, [] (environment& env) {
+            auto&& a = as_list(env["a"]);
+            return as_literal<double>(length(a));
         }}
     );
 
