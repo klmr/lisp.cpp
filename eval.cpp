@@ -1,4 +1,5 @@
 #include "eval.hpp"
+#include "error.hpp"
 
 namespace klmr { namespace lisp {
 
@@ -21,8 +22,8 @@ struct eval_call_visitor : boost::static_visitor<value> {
     }
 
     template <typename T>
-    auto operator ()(T const&) const -> value {
-        throw "Invalid symbol where call was expected";
+    auto operator ()(T const& val) const -> value {
+        throw invalid_node{val, "call"};
     }
 };
 
@@ -41,14 +42,16 @@ struct eval_visitor : boost::static_visitor<value> {
     }
 
     auto operator ()(list const& cons) const -> value {
+        if (empty(cons))
+            throw invalid_node{cons, "non-empty list"};
         auto&& call = eval(head(cons), env);
         return boost::apply_visitor(eval_call_visitor{env, tail(cons)}, call);
     }
 
     template <typename T>
-    auto operator ()(T const&) const -> value {
+    auto operator ()(T const& val) const -> value {
         // Everything else is invalid.
-        throw "invalid node type";
+        throw invalid_node{val};
     }
 };
 
