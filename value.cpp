@@ -4,50 +4,50 @@
 #include <iostream>
 #include <sstream>
 
+#include <boost/iterator/transform_iterator.hpp>
+
 namespace klmr { namespace lisp {
 
 template <call_type C>
 callable<C>::callable(
         environment& parent,
-        std::vector<symbol> const& formals,
+        value&& arglist,
         typename callable<C>::function_type lambda)
-    : parent{&parent}, formals{formals}, lambda{lambda} {}
+    : parent{&parent}, arglist{std::forward<value>(arglist)}, lambda{lambda} {}
+
+// Needed to convert an iterator-to-`char const*` to an interator-to-`symbol`.
+
+auto char_to_sym_impl = [](char const* sym) -> symbol {
+    return symbol{sym};
+};
+
+template <typename It>
+auto char_to_sym(It iter) -> boost::transform_iterator<decltype(char_to_sym_impl), It> {
+    return {iter, char_to_sym_impl};
+}
 
 template <call_type C>
 callable<C>::callable(
         environment& parent,
-        symbol const& arglist,
+        std::initializer_list<char const*> formals,
         typename callable<C>::function_type lambda)
-    : parent{&parent}, formals{arglist}, lambda{lambda} {}
+    : parent{&parent}
+    , arglist{list(char_to_sym(begin(formals)), char_to_sym(end(formals)))}
+    , lambda{lambda} {}
 
-template <typename Iter>
-struct make_env : boost::static_visitor<environment> {
-    environment& env;
-    Iter begin;
-    Iter end;
-
-    make_env(environment& env, Iter begin, Iter end)
-        : env{env}, begin{begin}, end{end} {}
-
-    auto operator ()(symbol const& arglist) const -> environment {
-        auto argpack = std::vector<value>{list(begin, end)};
-        return environment{env, {arglist}, argpack.begin(), argpack.end()};
-    }
-
-    auto operator ()(std::vector<symbol> const& formals) const -> environment {
-        return environment{env, formals, begin, end};
-    }
-};
+template <call_type C>
+callable<C>::callable(
+        environment& parent,
+        char const* arglist,
+        typename callable<C>::function_type lambda)
+    : parent{&parent}, arglist{symbol{arglist}}, lambda{lambda} {}
 
 template <call_type C>
 auto callable<C>::operator ()(
         environment& env,
         iterator begin,
         iterator end) const -> value {
-    // If `formals` happens to be an identifier then we need to construct a
-    // `list` of arguments first, and pass that as the one argument to the
-    // constructor of `environment`.
-    auto&& frame = boost::apply_visitor(make_env<iterator>{env, begin, end}, formals);
+    auto&& frame = environment{env, arglist, begin, end};
     return lambda(frame);
 }
 
@@ -139,6 +139,9 @@ template <>
 auto operator << <bool>(std::ostream& out, literal<bool> const& lit) -> std::ostream& {
     return out << (as_raw(lit) ? "#t" : "#f");
 }
+
+template auto operator << <double>(std::ostream&, literal<double> const&) -> std::ostream&;
+template auto operator << <std::string>(std::ostream&, literal<std::string> const&) -> std::ostream&;
 
 auto operator <<(std::ostream& out, macro const&) -> std::ostream& {
     return out << "#macro";

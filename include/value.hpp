@@ -65,8 +65,8 @@ struct list {
 
     list(std::initializer_list<value> values) : values(values) {}
 
-    list(const_range::iterator begin, const_range::iterator end)
-        : values(begin, end) {}
+    template <typename It>
+    list(It begin, It end) : values(begin, end) {}
 };
 
 inline auto head(list const& list) -> value const& {
@@ -104,13 +104,17 @@ struct callable {
     using iterator = list::const_range::iterator;
     using function_type = std::function<value(environment&)>;
 
-    callable(environment& parent, std::vector<symbol> const& formals, function_type lambda);
+    callable(environment& parent, value&& arglist, function_type lambda);
 
-    callable(environment& parent, symbol const& arglist, function_type lambda);
+    // Convenience functions for hard-coding builtins
+
+    callable(environment& parent, std::initializer_list<char const*> formals, function_type lambda);
+
+    callable(environment& parent, char const* arglist, function_type lambda);
 
     // FIXME This leaks memory for “upward funargs”.
     environment* parent;
-    boost::variant<std::vector<symbol>, symbol> formals;
+    value arglist;
     function_type lambda;
 
     auto operator ()(environment& env, iterator begin, iterator end) const -> value;
