@@ -35,6 +35,18 @@ auto parent(environment const& env) -> environment* {
     return env.parent;
 }
 
+struct value_equals : boost::static_visitor<bool> {
+    template <typename T>
+    auto operator ()(literal<T> const& a, literal<T> const& b) const -> bool {
+        return as_raw(a) == as_raw(b);
+    }
+
+    template <typename T, typename U>
+    auto operator ()(T const&, U const&) const -> bool {
+        throw value_error{"Mismatching operand types for =="};
+    }
+};
+
 auto get_global_environment() -> environment {
     auto env = environment{};
 
@@ -60,17 +72,13 @@ auto get_global_environment() -> environment {
 
 #   undef VAR_OPERATOR
 
-#if 0
-#   define BIN_OPERATOR(name, op)
-
     env.add(symbol{"=="},
         call{env, {"a", "b"}, [] (environment& env) {
             auto&& a = env["a"];
             auto&& b = env["b"];
-            return boost::apply_visitor(equals{}, a, b);
+            return literal<bool>{boost::apply_visitor(value_equals{}, a, b)};
         }}
     );
-#endif
 
     env.add(symbol{"quote"},
         macro{env, std::vector<symbol>{"expr"},
