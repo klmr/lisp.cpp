@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <numeric>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -13,7 +14,12 @@ environment::environment(
         std::vector<symbol> formals,
         call::iterator a, call::iterator b)
         : parent{&parent} {
-    assert(static_cast<decltype(formals.size())>(std::distance(a, b)) == formals.size());
+    auto argsize = formals.size();
+    auto paramsize = static_cast<decltype(formals.size())>(std::distance(a, b));
+    if (argsize != paramsize)
+        throw value_error{"Expected " + std::to_string(argsize) +
+            " arguments, got " + std::to_string(paramsize)};
+
     for (auto&& sym : formals)
         add(sym, *a++);
 }
