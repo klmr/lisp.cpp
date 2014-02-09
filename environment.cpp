@@ -64,7 +64,7 @@ auto get_global_environment() -> environment {
             return std::accumulate( \
                 std::next(begin(args)), end(args), \
                 *begin(args), [] (value const& a, value const& b) { \
-                    return literal<type>{as_raw<type>(a) op as_raw<type>(b)}; \
+                    return as_literal(as_raw<type>(a) op as_raw<type>(b)); \
                 }); \
         }} \
     )
@@ -83,7 +83,7 @@ auto get_global_environment() -> environment {
         call{env, {"a", "b"}, [] (environment& env) { \
             auto&& a = env["a"]; \
             auto&& b = env["b"]; \
-            return literal<ret>{boost::apply_visitor(binary_operation<ret, op>{}, a, b)}; \
+            return as_literal(boost::apply_visitor(binary_operation<ret, op>{}, a, b)); \
         }} \
     )
 
@@ -98,7 +98,7 @@ auto get_global_environment() -> environment {
 
     env.add(symbol{"not"},
         call{env, std::vector<symbol>{"a"}, [] (environment& env) {
-            return literal<bool>{not as_raw<bool>(env["a"])};
+            return as_literal(not as_raw<bool>(env["a"]));
         }}
     );
 
