@@ -1,3 +1,4 @@
+#include "read.hpp"
 #include "value.hpp"
 
 #include <iterator>
@@ -9,7 +10,6 @@
 #include <boost/spirit/include/phoenix_operator.hpp>
 #include <boost/spirit/home/phoenix/object/construct.hpp>
 #include <boost/spirit/include/phoenix_fusion.hpp>
-#include <boost/spirit/include/support_multi_pass.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
 
 #include <boost/optional.hpp>
@@ -62,12 +62,6 @@ auto read(Iterator& begin, Iterator end) -> boost::optional<value> {
 
 template auto read<std::string::iterator>(std::string::iterator&, std::string::iterator)
     -> boost::optional<value>;
-
-namespace detail {
-using underlying_t = std::istreambuf_iterator<char>;
-}
-
-using stream_iterator_t = boost::spirit::multi_pass<detail::underlying_t>;
 
 template auto read<stream_iterator_t>(stream_iterator_t&, stream_iterator_t)
     -> boost::optional<value>;

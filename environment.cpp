@@ -1,6 +1,8 @@
 #include "environment.hpp"
 #include "eval.hpp"
+#include "read.hpp"
 
+#include <fstream>
 #include <functional>
 #include <numeric>
 #include <string>
@@ -192,6 +194,14 @@ auto get_global_environment() -> environment {
             return result;
         }}
     );
+
+    // Load all the rest from Lisp source
+
+    auto&& lib_file = std::ifstream{"./common.lisp"};
+    auto begin = stream_iterator_t{lib_file};
+    auto end = stream_iterator_t{};
+    while (auto&& expr = read(begin, end))
+        eval(*expr, env);
 
     return env;
 }
