@@ -13,4 +13,5 @@ x
 (begin (set! x (+ x 1)) (set! x (+ x 1)) x)
 (not (!= x 3))
 (length (quote (1 2 3)))
+(list 1 2 3 4)
 "All tests passed!"

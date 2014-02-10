@@ -12,7 +12,7 @@ namespace klmr { namespace lisp {
 struct environment {
     environment(environment* parent = nullptr) : parent{parent} {}
 
-    environment(environment&, std::vector<symbol>, call::iterator a, call::iterator b);
+    environment(environment&, value const& arglist, call::iterator a, call::iterator b);
 
     auto operator [](symbol const& sym) -> value&;
 

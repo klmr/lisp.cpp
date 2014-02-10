@@ -1,6 +1,8 @@
 #include "environment.hpp"
 #include "eval.hpp"
+#include "read.hpp"
 
+#include <fstream>
 #include <functional>
 #include <numeric>
 #include <string>
@@ -9,19 +11,43 @@
 
 namespace klmr { namespace lisp {
 
+struct bind_args : boost::static_visitor<void> {
+    environment& env;
+    call::iterator begin;
+    call::iterator end;
+
+    bind_args(environment& env, call::iterator begin, call::iterator end)
+        : env{env}, begin{begin}, end{end} {}
+
+    auto operator ()(symbol const& sym) const -> void {
+        env.add(sym, list(begin, end));
+    }
+
+    auto operator ()(list const& lst) const -> void {
+        auto argsize = length(lst);
+        auto paramsize = static_cast<decltype(argsize)>(std::distance(begin, end));
+        if (argsize != paramsize)
+            throw value_error{"Expected " + std::to_string(argsize) +
+                " arguments, got " + std::to_string(paramsize)};
+
+        auto i = begin;
+        for (auto&& sym : lst)
+            env.add(as_symbol(sym), *i++);
+    }
+
+    template <typename T>
+    auto operator ()(T&& val) const -> void {
+        throw invalid_node{val, "symbol"};
+    }
+};
+
 environment::environment(
         environment& parent,
-        std::vector<symbol> formals,
+        value const& arglist,
         call::iterator a, call::iterator b)
         : parent{&parent} {
-    auto argsize = formals.size();
-    auto paramsize = static_cast<decltype(formals.size())>(std::distance(a, b));
-    if (argsize != paramsize)
-        throw value_error{"Expected " + std::to_string(argsize) +
-            " arguments, got " + std::to_string(paramsize)};
-
-    for (auto&& sym : formals)
-        add(sym, *a++);
+    // Bind arglist to corresponding args, or single symbol to list of args
+    boost::apply_visitor(bind_args{*this, a, b}, arglist);
 }
 
 auto environment::operator[](symbol const& sym) -> value& {
@@ -103,38 +129,35 @@ auto get_global_environment() -> environment {
 #   undef BIN_OPERATOR
 
     env.add(symbol{"not"},
-        call{env, std::vector<symbol>{"a"}, [] (environment& env) {
+        call{env, {"a"}, [] (environment& env) {
             return as_literal(not as_raw<bool>(env["a"]));
         }}
     );
 
     env.add(symbol{"empty?"},
-        call{env, std::vector<symbol>{"a"}, [] (environment& env) {
+        call{env, {"a"}, [] (environment& env) {
             auto&& a = as_list(env["a"]);
             return as_literal(empty(a));
         }}
     );
 
     env.add(symbol{"length"},
-        call{env, std::vector<symbol>{"a"}, [] (environment& env) {
+        call{env, {"a"}, [] (environment& env) {
             auto&& a = as_list(env["a"]);
             return as_literal<double>(length(a));
         }}
     );
 
     env.add(symbol{"quote"},
-        macro{env, std::vector<symbol>{"expr"},
-            [] (environment& env) { return env["expr"]; }}
+        macro{env, {"expr"}, [] (environment& env) { return env["expr"]; }}
     );
 
     env.add(symbol{"lambda"},
         macro{env, {"args", "expr"}, [] (environment& env) {
-            auto&& args = as_list(env["args"]);
-            auto formals = std::vector<symbol>(length(args));
-            std::transform(begin(args), end(args), begin(formals), as_symbol);
+            auto&& args = env["args"];
             auto expr = env["expr"];
             // FIXME Capture by value incurs expensive copy. Solved in C++14.
-            return call{env, formals, [expr](environment& frame) {
+            return call{env, std::move(args), [expr](environment& frame) {
                 return eval(expr, frame);
             }};
         }}
@@ -171,6 +194,14 @@ auto get_global_environment() -> environment {
             return result;
         }}
     );
+
+    // Load all the rest from Lisp source
+
+    auto&& lib_file = std::ifstream{"./common.lisp"};
+    auto begin = stream_iterator_t{lib_file};
+    auto end = stream_iterator_t{};
+    while (auto&& expr = read(begin, end))
+        eval(*expr, env);
 
     return env;
 }

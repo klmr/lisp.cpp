@@ -4,6 +4,7 @@
 #include "value.hpp"
 
 #include <boost/optional.hpp>
+#include <boost/spirit/include/support_multi_pass.hpp>
 
 namespace klmr { namespace lisp {
 
@@ -16,6 +17,12 @@ inline auto read_full(Iterator begin, Iterator end) -> boost::optional<value> {
     auto&& result = read(begin, end);
     return boost::optional<value>{result and begin == end, *result};
 }
+
+namespace detail {
+    using underlying_t = std::istreambuf_iterator<char>;
+}
+
+using stream_iterator_t = boost::spirit::multi_pass<detail::underlying_t>;
 
 } } // namespace klmr::lisp
 
