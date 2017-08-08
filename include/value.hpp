@@ -2,6 +2,7 @@
 #define KLMR_LISP_CPP_VALUE_HPP
 
 #include <iosfwd>
+#include <functional>
 #include <string>
 #include <vector>
 #include <unordered_map>
