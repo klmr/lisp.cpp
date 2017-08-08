@@ -43,7 +43,7 @@ struct lisp_grammar : qi::grammar<Iterator, value(), qi::ascii::space_type> {
         start %= sym | lit | lst;
         sym %= eps >> lexeme[+(char_("A-Za-z") | char_('-') | char_("+*/%~&|^!=<>?"))];
         lit %= boolean | number | string;
-        boolean %=
+        boolean %= eps >>
             qi::lit("#t")[_val = construct<literal<bool>>(true)] |
             qi::lit("#f")[_val = construct<literal<bool>>(false)];
         number %= double_;
