@@ -7,7 +7,7 @@
 #include <boost/spirit/include/qi_match_attr.hpp>
 #include <boost/spirit/include/phoenix_core.hpp>
 #include <boost/spirit/include/phoenix_operator.hpp>
-#include <boost/spirit/home/phoenix/object/construct.hpp>
+#include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/phoenix_fusion.hpp>
 #include <boost/spirit/include/support_multi_pass.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
